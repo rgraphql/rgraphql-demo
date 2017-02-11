@@ -3,6 +3,18 @@ import { SoyuzService } from './services/soyuz/soyuz.service';
 import { SocketBusService } from './services/socket-bus/socket-bus';
 import { environment } from '../environments/environment';
 import { Subscription } from 'rxjs/Subscription';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import {
+  ViewChild,
+  ElementRef,
+  OnInit,
+} from '@angular/core';
+
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+
+declare var require: Function;
+let GraphiQL: any = require('graphiql');
 
 import {
   ObservableQuery,
@@ -15,13 +27,15 @@ import * as graphql from 'graphql';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  public value: any;
+  public graphiqlValue = new BehaviorSubject<any>(null);
+  @ViewChild('reactCtr')
+  private reactCtr: ElementRef;
   private query: ObservableQuery<any>;
   private querySub: Subscription;
   private lastQuery: string;
-  private _querySrc;
-
-  public value: any;
+  private _querySrc: string;
 
   get querySrc(): string {
     return this._querySrc;
@@ -42,7 +56,8 @@ export class AppComponent {
   }
 
   constructor(public soyuzService: SoyuzService,
-              public socketBusService: SocketBusService) {
+              public socketBusService: SocketBusService,
+              private elRef: ElementRef) {
     socketBusService.init(environment.server);
     let sampleQuery = '{\r\n  allPeople {\n    name\n    steps\n  }\n}';
     let lastQuery = window.localStorage.getItem('lastQuery');
@@ -51,6 +66,19 @@ export class AppComponent {
     } else {
       this.querySrc = sampleQuery;
     }
+  }
+
+  public ngOnInit() {
+    let fetcher = (params: any) => {
+      console.log('Fetcher, params:');
+      console.log(params);
+      this.querySrc = params.query;
+      return this.graphiqlValue;
+    };
+    let ele = React.createElement(GraphiQL, {
+      fetcher: fetcher,
+    });
+    ReactDOM.render(ele, this.reactCtr.nativeElement);
   }
 
   public initQuery(query: graphql.DocumentNode) {
@@ -62,6 +90,7 @@ export class AppComponent {
     });
     this.querySub = this.query.subscribe((value) => {
       this.value = value;
+      this.graphiqlValue.next(value);
     });
   }
 
