@@ -20,15 +20,22 @@
     "@angular/platform-browser": "2.2.3",
     "@angular/platform-browser-dynamic": "2.2.3",
     "@angular/router": "3.2.3",
+    "angular2-logger": "^0.5.1",
     "core-js": "^2.4.1",
+    "graphql": "^0.9.1",
     "rxjs": "5.0.0-beta.12",
+    "socket.io-client": "^1.7.2",
+    "soyuz": "^0.1.0",
     "ts-helpers": "^1.1.1",
+    "xcase": "^2.0.1",
     "zone.js": "^0.6.23"
   },
   "devDependencies": {
     "@angular/compiler-cli": "2.2.3",
+    "@types/graphql": "^0.8.6",
     "@types/jasmine": "2.5.38",
     "@types/node": "^6.0.42",
+    "@types/socket.io-client": "^1.4.29",
     "angular-cli": "1.0.0-beta.22",
     "codelyzer": "~2.0.0-beta.1",
     "jasmine-core": "2.5.2",
@@ -41,7 +48,7 @@
     "protractor": "4.0.9",
     "ts-node": "1.2.1",
     "tslint": "^4.0.2",
-    "typescript": "~2.0.3",
+    "typescript": "^2.0.0",
     "webdriver-manager": "10.2.5"
   }
 }
