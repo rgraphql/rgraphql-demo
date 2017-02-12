@@ -1,19 +1,2 @@
-<style>
-textarea {
-  width: 100%;
-  height: 300px;
-}
-</style>
-
-<textarea [(ngModel)]="querySrc"></textarea>
-
-<div *ngIf="value && value.data">
-  <textarea disabled>{{stringify(value.data)}}</textarea>
-</div>
-
-<div *ngIf="value && value.errors.length">
-  Query Errors: {{stringify(value.errors)}}
-</div>
-
-<div #reactCtr style="width: 100%; height: 300px">
+<div id="reactCtr" #reactCtr>
 </div>

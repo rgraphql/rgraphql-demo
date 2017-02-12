@@ -46,7 +46,10 @@ export function DecodeSocketBusMessage(data: string): IRGQLServerMessage {
     let len = pbjs.util.base64.length(sbm.b);
     let buf = pbjs.util.newBuffer(len);
     pbjs.util.base64.decode(sbm.b, buf, 0);
-    sbm.js = (<pbjs.Type>RGQLServerMessage).decode(buf).toJSON();
+    sbm.js = (<pbjs.Type>RGQLServerMessage).decode(buf).toObject({
+      longs: Number,
+      bytes: Array,
+    });
   } else if (sbm.js) {
     sbm.js = camelizeKeys(sbm.js);
   }

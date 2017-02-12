@@ -26,13 +26,11 @@ export class SocketBusTransport implements ITransport {
 
   // Soyuz will call this function with a callback function for handling messages.
   public onMessage(cb: (mes: IRGQLServerMessage) => void): void {
-    console.log('got message cb');
     this.handleMessageCb = cb;
   }
 
   // Soyuz will call this function with outgoing messages for the server.
   public send(msg: IRGQLClientMessage) {
-    console.log(`Sent message: ${JSON.stringify(msg)}`);
     if (!this.socketBus) {
       return;
     }
