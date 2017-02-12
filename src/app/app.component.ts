@@ -72,7 +72,7 @@ export class AppComponent implements OnInit {
     this._variablesSrc = value;
     try {
       let varbs = JSON.parse(value);
-      this.queryVariables = value;
+      this.queryVariables = varbs;
       this.initQuery();
     } catch (e) {
       // Ignore
