@@ -19,6 +19,7 @@ import * as ReactDOM from 'react-dom';
 
 declare var require: Function;
 let GraphiQL: any = require('graphiql');
+let ToolbarButton = require('graphiql/dist/components/ToolbarButton');
 
 import {
   ObservableQuery,
@@ -119,17 +120,34 @@ export class AppComponent implements OnInit {
         }, 200));
       });
     };
-    let ele = React.createElement(GraphiQL, {
-      fetcher: fetcher,
-      isWaitingForResponse: true,
-      onEditQuery: (value: string) => {
-        this.querySrc = value;
-      },
-      onEditVariables: (val: any) => {
-        this.variablesSrc = val;
-      },
-    });
-    this.graphiqlInstance = ReactDOM.render(ele, this.reactCtr.nativeElement);
+    GraphiQL.Logo = (props) => {
+      let makeEm = (text) => {
+        return React.createElement('em', null, text);
+      };
+
+      let titleEle = React.createElement(
+        'span',
+        null,
+        makeEm('r'),
+        'Graph',
+        makeEm('i'),
+        'QL',
+      );
+      return React.createElement('div', {className: 'title'}, titleEle);
+    };
+    GraphiQL.Toolbar = (props) => {
+      return React.createElement(
+        'div',
+        {className: 'toolbar'},
+        props.children,
+        React.createElement(ToolbarButton.ToolbarButton, {
+          onClick: () => {
+            window.open('https://github.com/rgraphql/magellan', '_blank');
+          },
+          title: 'GitHub Source',
+          label: 'GitHub Source'
+        }));
+    };
 
     let sampleVariables = SAMPLE_VARIABLES_SRC;
     let lastVariables = window.localStorage.getItem('lastVariables');
@@ -146,6 +164,20 @@ export class AppComponent implements OnInit {
     } else {
       this.querySrc = sampleQuery;
     }
+
+    let ele = React.createElement(GraphiQL, {
+      fetcher: fetcher,
+      isWaitingForResponse: true,
+      query: this.querySrc,
+      variables: this.variablesSrc,
+      onEditQuery: (value: string) => {
+        this.querySrc = value;
+      },
+      onEditVariables: (val: any) => {
+        this.variablesSrc = val;
+      },
+    });
+    this.graphiqlInstance = ReactDOM.render(ele, this.reactCtr.nativeElement);
 
     // Monitor connection status
     let connectedOnce = false;
