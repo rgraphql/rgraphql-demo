@@ -9,6 +9,10 @@ import {
   ElementRef,
   OnInit,
 } from '@angular/core';
+import {
+  SAMPLE_QUERY_SRC,
+  SAMPLE_VARIABLES_SRC,
+} from './sample';
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
@@ -74,6 +78,7 @@ export class AppComponent implements OnInit {
       let varbs = JSON.parse(value);
       this.queryVariables = varbs;
       this.initQuery();
+      window.localStorage.setItem('lastVariables', value);
     } catch (e) {
       // Ignore
     }
@@ -87,6 +92,7 @@ export class AppComponent implements OnInit {
   }
 
   public ngOnInit() {
+    //
     // The only thing that goes through fetcher is the introspection query.
     let fetcher = (params: any) => {
       let querySrc = params.query;
@@ -101,18 +107,21 @@ export class AppComponent implements OnInit {
           if (!value || !value.data || !value.data.__schema || !value.data.__schema.types) {
             return;
           }
+          if (!this.socketBusService.connectionStatus.value.connected) {
+            return;
+          }
 
           // Deep copy the result, since we immediately unsubscribe
           let dat = JSON.stringify(value);
           sub.unsubscribe();
           let pdat = JSON.parse(dat);
-          console.log(pdat);
           resolve(pdat);
         }, 200));
       });
     };
     let ele = React.createElement(GraphiQL, {
       fetcher: fetcher,
+      isWaitingForResponse: true,
       onEditQuery: (value: string) => {
         this.querySrc = value;
       },
@@ -122,17 +131,43 @@ export class AppComponent implements OnInit {
     });
     this.graphiqlInstance = ReactDOM.render(ele, this.reactCtr.nativeElement);
 
-    let sampleQuery = '{\r\n  allPeople {\n    name\n    steps\n  }\n}';
+    let sampleVariables = SAMPLE_VARIABLES_SRC;
+    let lastVariables = window.localStorage.getItem('lastVariables');
+    if (lastVariables && lastVariables.length) {
+      this.variablesSrc = lastVariables;
+    } else {
+      this.variablesSrc = sampleVariables;
+    }
+
+    let sampleQuery = SAMPLE_QUERY_SRC;
     let lastQuery = window.localStorage.getItem('lastQuery');
     if (lastQuery && lastQuery.length) {
       this.querySrc = lastQuery;
     } else {
       this.querySrc = sampleQuery;
     }
+
+    // Monitor connection status
+    let connectedOnce = false;
+    this.socketBusService.connectionStatus.subscribe((stat) => {
+      if (!stat.connected) {
+        if (!connectedOnce) {
+          return;
+        }
+        this.graphiqlInstance.setState({
+          isWaitingForResponse: true,
+        });
+      } else {
+        connectedOnce = true;
+        this.graphiqlInstance.setState({
+          isWaitingForResponse: false,
+        });
+      }
+    });
   }
 
   public initQuery() {
-    if (this.query) {
+    if (this.query && this.querySub) {
       this.querySub.unsubscribe();
     }
     this.query = this.soyuzService.client.query<any>({
@@ -142,6 +177,9 @@ export class AppComponent implements OnInit {
     this.querySub = this.query.subscribe((value) => {
       this.value = value;
       if (this.graphiqlInstance) {
+        if (!this.socketBusService.connectionStatus.value.connected) {
+          return;
+        }
         this.graphiqlInstance.setState({
           response: JSON.stringify(value, null, 2),
         });
