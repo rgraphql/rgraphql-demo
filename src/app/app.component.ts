@@ -206,7 +206,10 @@ export class AppComponent implements OnInit {
       query: this.queryAst,
       variables: this.queryVariables,
     });
-    this.querySub = this.query.subscribe((value) => {
+    let qs = this.querySub = this.query.subscribe((value) => {
+      if (qs !== this.querySub) {
+        return;
+      }
       this.value = value;
       if (this.graphiqlInstance) {
         if (!this.socketBusService.connectionStatus.value.connected) {
