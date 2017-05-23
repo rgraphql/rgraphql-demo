@@ -1,48 +1,35 @@
 import { Injectable } from '@angular/core';
-import { Logger } from 'angular2-logger/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import {
   IRGQLClientMessage,
   IRGQLServerMessage,
+  RGQLClientMessage,
+  RGQLServerMessage,
 } from 'rgraphql';
 import {
   socketBusSoyuzInterface,
 } from '../soyuz/client';
 import {
-  EncodeSocketBusMessage,
-  DecodeSocketBusMessage,
-} from './message';
-
-import * as io from 'socket.io-client';
-
-export interface IReconnectStatus {
-  attempt: number;
-}
-
-export interface IConnectionStatus {
-  connected: boolean;
-  connecting: boolean;
-  reconnectStatus?: IReconnectStatus;
-}
+  ISBConnectionStatus,
+  ISBReconnectStatus,
+  WebSocketClient,
+} from './websocket-client';
 
 @Injectable()
 export class SocketBusService {
-  public connectionStatus: BehaviorSubject<IConnectionStatus> =
-    new BehaviorSubject<IConnectionStatus>({connected: false, connecting: true});
+  public connectionStatus: BehaviorSubject<ISBConnectionStatus>;
   // Should we use JSON websocket frames (for debugging)
-  public useJSON = false;
-  private client: SocketIOClient.Socket;
-  private lastConnectState: IConnectionStatus;
+  private client: WebSocketClient;
+  private lastConnectState: ISBConnectionStatus;
   private handlers: { [id: string]: (message: any) => void } = {};
   private isDisposed: boolean;
 
-  constructor(private log: Logger) {
-  }
-
   // Create the client, start connect loop etc
   public init(server: string) {
+    this.client = new WebSocketClient(server);
+    this.client.start();
+    this.connectionStatus = this.client.status;
     this.lastConnectState = this.connectionStatus.value;
-    this.client = io(server);
     this.registerCallbacks();
     window['sbService'] = this;
     window['sioClient'] = this.client;
@@ -52,51 +39,22 @@ export class SocketBusService {
     window['socketBusDispose'] = () => {
       this.destroy();
     };
-    if (window.localStorage && window.localStorage.getItem('enableJsonFrames')) {
-      this.useJSON = true;
-    }
     socketBusSoyuzInterface.provideSocketBus(this);
   }
 
   public send(message: IRGQLClientMessage) {
-    let encoded = EncodeSocketBusMessage(message, this.useJSON);
-    this.client.emit('sb', encoded);
+    const encoded = RGQLClientMessage.encode(message).finish();
+    this.client.send(encoded.buffer);
   }
 
   public destroy() {
     this.isDisposed = true;
-    this.client.close();
+    this.client.stop();
   }
 
   private registerCallbacks() {
-    this.client.on('connect', (s: SocketIOClient.Socket) => {
-      this.log.info('Socket bus connected.');
-      this.connectionStatus.next({connected: true, connecting: false});
-    });
-    this.client.on('reconnecting', (cnt: number) => {
-      this.connectionStatus.next({
-        connected: false,
-        connecting: true,
-        reconnectStatus: {
-          attempt: cnt,
-        },
-      });
-    });
-    this.client.on('disconnect', () => {
-      this.connectionStatus.next({
-        connected: false,
-        connecting: false,
-      });
-    });
-    this.client.on('error', (err: any) => {
-      this.log.error(`Error in Socket.IO: ${err}`);
-    });
-    this.client.on('reconnect', (att: number) => {
-      this.log.info(`Reconnected after ${att} attempts.`);
-      this.connectionStatus.next({connected: true, connecting: false});
-    });
-    this.client.on('sb', (data) => {
-      let msg = DecodeSocketBusMessage(data);
+    this.client.messages.subscribe((data) => {
+      const msg = RGQLServerMessage.decode(data.data).toObject();
       socketBusSoyuzInterface.handleMessage(msg);
     });
   }

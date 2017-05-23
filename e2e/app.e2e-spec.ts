@@ -1,6 +1,6 @@
 import { RgraphqlDemoPage } from './app.po';
 
-describe('rgraphql-demo App', function() {
+describe('rgraphql-demo App', () => {
   let page: RgraphqlDemoPage;
 
   beforeEach(() => {

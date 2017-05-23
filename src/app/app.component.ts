@@ -37,7 +37,7 @@ export class AppComponent implements OnInit {
   public value: any;
   @ViewChild('reactCtr')
   private reactCtr: ElementRef;
-  private query: ObservableQuery<any>;
+  private query: ObservableQuery;
   private querySub: Subscription;
   private lastQuery: string;
   private _querySrc: string;

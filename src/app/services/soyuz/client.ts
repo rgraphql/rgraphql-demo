@@ -19,9 +19,14 @@ export class SocketBusTransport implements ITransport {
   private socketBusConnected: boolean;
 
   private handleMessageCb: (mes: IRGQLServerMessage) => void;
+  private queryIdCounter = 1;
 
   constructor() {
     this.soyuzClient = new SoyuzClient();
+  }
+
+  public nextQueryId(): number {
+    return this.queryIdCounter++;
   }
 
   // Soyuz will call this function with a callback function for handling messages.

@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  server: 'magellan.demo.rgraphql.org'
+  server: 'ws://magellan.demo.rgraphql.org/sock',
 };
