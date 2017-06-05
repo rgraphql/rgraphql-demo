@@ -43,8 +43,8 @@ export class SocketBusService {
   }
 
   public send(message: IRGQLClientMessage) {
-    const encoded = RGQLClientMessage.encode(message).finish();
-    this.client.send(encoded.buffer);
+    const encoded = RGQLClientMessage.encode(RGQLClientMessage.create(message)).finish();
+    this.client.send(encoded);
   }
 
   public destroy() {
@@ -54,7 +54,8 @@ export class SocketBusService {
 
   private registerCallbacks() {
     this.client.messages.subscribe((data) => {
-      const msg = RGQLServerMessage.decode(data.data).toObject();
+      const arr = new Uint8Array(<ArrayBuffer>data.data);
+      const msg = RGQLServerMessage.decode(arr).toObject();
       socketBusSoyuzInterface.handleMessage(msg);
     });
   }
