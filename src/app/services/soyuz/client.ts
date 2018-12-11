@@ -39,6 +39,7 @@ export class SocketBusTransport implements ITransport {
     if (!this.socketBus) {
       return;
     }
+
     this.socketBus.send(msg);
   }
 

@@ -27,7 +27,6 @@
     "protobufjs": "^6.7.3",
     "react": "^15.5.4",
     "react-dom": "^15.5.4",
-    "rgraphql": "^0.5.0",
     "rxjs": "^5.1.0",
     "soyuz": "^0.4.1",
     "xcase": "^2.0.1",
